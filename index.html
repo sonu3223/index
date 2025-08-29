@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sonu's Tandoori Dhaba</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body{font-family: 'Noto Sans', sans-serif;}
+    .hero{background: linear-gradient(90deg, #ffb34733, #ffcc33aa);padding:40px 0}
+    .menu-card img{height:140px;object-fit:cover}
+    .cart-badge{position:relative}
+    .fixed-footer{position:fixed;right:20px;bottom:20px;z-index:999}
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="#">Sonu's Tandoori Dhaba</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navmenu">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="#menu">मेन्यू</a></li>
+        <li class="nav-item"><a class="nav-link" href="#about">हमारे बारे में</a></li>
+        <li class="nav-item"><a class="nav-link" href="#contact">संपर्क</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container text-center">
+    <h1 class="display-5">स्वागत है Sonu's Tandoori Dhaba में</h1>
+    <p class="lead">तेज़ सर्विस | ताज़ा सामग्री | स्वादिष्ट खाना</p>
+    <a class="btn btn-primary me-2" href="#menu">मेन्यू देखें</a>
+    <a class="btn btn-outline-dark" href="#contact">ऑर्डर / संपर्क</a>
+  </div>
+</header>
+
+<main class="container my-5">
+  <section id="menu">
+    <div class="d-flex align-items-center mb-3">
+      <h2 class="me-auto">मेन्यू</h2>
+      <div>
+        <button class="btn btn-sm btn-outline-secondary" onclick="showCart()">कार्ट देखें <span id="cartCount" class="badge bg-danger ms-2">0</span></button>
+      </div>
+    </div>
+
+    <div id="menuGrid" class="row g-3"></div>
+  </section>
+
+  <hr class="my-5">
+
+  <section id="about">
+    <h3>हमारे बारे में</h3>
+    <p>Sonu's Tandoori Dhaba — Main Market, Palia Kalan, Lakhimpur Kheri, UP. यहाँ आपको ताज़ा और स्वादिष्ट भारतीय व्यंजन मिलते हैं।</p>
+    <ul>
+      <li>समय: सुबह 10:00 — रात 11:00</li>
+      <li>विशेष: तंदूरी डिशेस और होममेड मसाले</li>
+    </ul>
+  </section>
+
+  <hr class="my-5">
+
+  <section id="contact">
+    <h3>संपर्क करें</h3>
+    <p>फोन: <a id="phoneLink" href="tel:+919876543210">+91-9876543210</a></p>
+    <p>ईमेल: <a href="mailto:contact@sonusdhaba.com">contact@sonusdhaba.com</a></p>
+    <p>पता: Main Market, Palia Kalan, Lakhimpur Kheri, UP</p>
+
+    <div class="ratio ratio-16x9">
+      <iframe src="https://maps.google.com/maps?q=Palia%20Kalan%20Lakhimpur%20Kheri&t=&z=13&ie=UTF8&iwloc=&output=embed" allowfullscreen loading="lazy"></iframe>
+    </div>
+  </section>
+</main>
+
+<div class="fixed-footer d-flex flex-column gap-2">
+  <button class="btn btn-success" id="whatsappOrderBtn">WhatsApp से ऑर्डर</button>
+  <button class="btn btn-primary" onclick="showCart()">कार्ट: <span id="cartTotal">₹0</span></button>
+</div>
+
+<div class="modal fade" id="cartModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">आपका कार्ट</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="cartItems"></div>
+        <hr>
+        <div class="d-flex justify-content-between align-items-center">
+          <h5>कुल: <span id="grandTotal">₹0</span></h5>
+          <div>
+            <button class="btn btn-outline-secondary me-2" onclick="clearCart()">क्लियर</button>
+            <button class="btn btn-success" id="checkoutBtn">WhatsApp पर भेजें</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const CONFIG = { PHONE_NUMBER: '919876543210', RESTAURANT_NAME: "Sonu's Tandoori Dhaba", CURRENCY: '₹'};
+
+const MENU = [
+  {id:1, name:'तंदूरी रोटी', desc:'ताज़ी तंदूरी रोटियाँ', price:15, img:'https://source.unsplash.com/400x300/?roti'},
+  {id:2, name:'पनीर बटर मसाला', desc:'क्रीमी और स्वादिष्ट', price:220, img:'https://source.unsplash.com/400x300/?paneer'},
+  {id:3, name:'बटर चिकन', desc:'रेस्टोरेंट की खासियत', price:260, img:'https://source.unsplash.com/400x300/?butter-chicken'},
+  {id:4, name:'दाल तड़का', desc:'गरमा गरम तड़का दाल', price:120, img:'https://source.unsplash.com/400x300/?dal'},
+  {id:5, name:'वेज बिरयानी', desc:'खुशबूदार बिरयानी', price:180, img:'https://source.unsplash.com/400x300/?biryani'},
+  {id:6, name:'गुलाब जामुन (2 pcs)', desc:'मीठे का मज़ा', price:50, img:'https://source.unsplash.com/400x300/?gulab-jamun'}
+];
+
+let cart = JSON.parse(localStorage.getItem('cart_v1') || '[]');
+function saveCart(){ localStorage.setItem('cart_v1', JSON.stringify(cart)); updateCartUI(); }
+function addToCart(id){ const item = MENU.find(m=>m.id===id); const existing = cart.find(c=>c.id===id); if(existing){ existing.qty++; } else cart.push({id:item.id, name:item.name, price:item.price, qty:1}); saveCart(); }
+function removeFromCart(id){ cart = cart.filter(c=>c.id!==id); saveCart(); }
+function changeQty(id, delta){ const it = cart.find(c=>c.id===id); if(!it) return; it.qty += delta; if(it.qty<1) removeFromCart(id); saveCart(); }
+function clearCart(){ cart=[]; saveCart(); document.querySelector('#cartItems').innerHTML=''; document.getElementById('grandTotal').innerText=CONFIG.CURRENCY+'0'; }
+function getTotal(){ return cart.reduce((s,i)=>s + i.price*i.qty, 0); }
+function updateCartUI(){ document.getElementById('cartCount').innerText = cart.reduce((s,i)=>s+i.qty,0); document.getElementById('cartTotal').innerText = CONFIG.CURRENCY + getTotal(); }
+function showCart(){ const modal = new bootstrap.Modal(document.getElementById('cartModal')); renderCartItems(); modal.show(); }
+function renderCartItems(){ const el = document.getElementById('cartItems'); if(cart.length===0) { el.innerHTML='<p>आपका कार्ट खाली है।</p>'; document.getElementById('grandTotal').innerText = CONFIG.CURRENCY+'0'; return; } el.innerHTML = ''; cart.forEach(i=>{ const row = document.createElement('div'); row.className='d-flex align-items-center justify-content-between mb-2'; row.innerHTML = `<div><strong>${i.name}</strong><div class="text-muted">${i.qty} x ${CONFIG.CURRENCY}${i.price}</div></div><div><button class="btn btn-sm btn-outline-secondary me-1" onclick="changeQty(${i.id},-1)">-</button><button class="btn btn-sm btn-outline-secondary me-2" onclick="changeQty(${i.id},1)">+</button><button class="btn btn-sm btn-danger" onclick="removeFromCart(${i.id})">हटाएँ</button></div>`; el.appendChild(row); }); document.getElementById('grandTotal').innerText = CONFIG.CURRENCY + getTotal(); }
+function renderMenu(){ const grid = document.getElementById('menuGrid'); grid.innerHTML=''; MENU.forEach(item=>{ const col = document.createElement('div'); col.className='col-12 col-md-6 col-lg-4'; col.innerHTML = `<div class="card menu-card shadow-sm"><img src="${item.img}" class="card-img-top" alt="${item.name}"><div class="card-body"><h5 class="card-title">${item.name}</h5><p class="card-text text-muted small">${item.desc}</p><div class="d-flex justify-content-between align-items-center"><div><strong>${CONFIG.CURRENCY}${item.price}</strong></div><div><button class="btn btn-sm btn-outline-primary" onclick="addToCart(${item.id})">Add</button></div></div></div></div>`; grid.appendChild(col); }); }
+function sendWhatsAppOrder(){ if(cart.length===0){ alert('कृपया पहले कुछ items जोड़ें।'); return; } const lines = cart.map(i=>`${i.name} x ${i.qty} = ${CONFIG.CURRENCY}${i.price*i.qty}`); const total = CONFIG.CURRENCY + getTotal(); const text = encodeURIComponent(`*${CONFIG.RESTAURANT_NAME}* के लिए ऑर्डर:%0A${lines.join('%0A')}%0A%0Aकुल: ${total}%0A%0Aपता/नोट: `); const url = `https://wa.me/${CONFIG.PHONE_NUMBER}?text=${text}`; window.open(url,'_blank'); }
+renderMenu(); updateCartUI();
+document.getElementById('whatsappOrderBtn').addEventListener('click', sendWhatsAppOrder);
+document.getElementById('checkoutBtn').addEventListener('click', sendWhatsAppOrder);
+</script>
+</body>
+</html>
