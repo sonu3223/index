@@ -135,3 +135,51 @@ document.getElementById('checkoutBtn').addEventListener('click', sendWhatsAppOrd
 </script>
 </body>
 </html>
+ <script>
+    // Reservation form
+    const resForm = document.getElementById("reservationForm");
+    const resMsg = document.getElementById("formMsg");
+
+    resForm.addEventListener("submit", async function(e){
+      e.preventDefault();
+      let data = new FormData(resForm);
+      let res = await fetch(resForm.action, {
+        method: resForm.method,
+        body: data,
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        resMsg.innerText = "✅ Reservation submitted successfully!";
+        resMsg.style.color = "green";
+        resForm.reset();
+      } else {
+        resMsg.innerText = "❌ Something went wrong, please try again.";
+        resMsg.style.color = "red";
+      }
+    });
+
+    // Contact form
+    const contactForm = document.getElementById("contactForm");
+    const contactMsg = document.getElementById("contactMsg");
+
+    contactForm.addEventListener("submit", async function(e){
+      e.preventDefault();
+      let data = new FormData(contactForm);
+      let res = await fetch(contactForm.action, {
+        method: contactForm.method,
+        body: data,
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        contactMsg.innerText = "✅ Message sent successfully!";
+        contactMsg.style.color = "green";
+        contactForm.reset();
+      } else {
+        contactMsg.innerText = "❌ Failed to send message.";
+        contactMsg.style.color = "red";
+      }
+    });
+  </script>
+
+</body>
+</html>
