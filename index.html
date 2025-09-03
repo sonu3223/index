@@ -1,374 +1,90 @@
-{
-  "name": "zomato-banda-frontend",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev -p 3000",
-    "build": "next build",
-    "start": "next start -p 3000",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@reduxjs/toolkit": "^1.9.5",
-    "axios": "^1.4.0",
-    "next": "14.2.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-redux": "^8.1.1"
-  },
-  "devDependencies": {
-    "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.24",
-    "tailwindcss": "^3.4.7",
-    "typescript": "^5.4.2"
-  }
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zomato Banda - Single Page</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
 
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "types": ["node"]
-  },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
-}
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  images: {
-    domains: ["images.unsplash.com", "res.cloudinary.com", "via.placeholder.com"]
-  }
-};
-module.exports = nextConfig;
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}"
-  ],
-  theme: {
-    extend: {}
-  },
-  plugins: []
-};
-module.exports = {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {}
-  }
-};
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+<header class="bg-red-500 text-white p-4 flex justify-between items-center">
+  <h1 class="text-lg font-bold">Zomato Banda</h1>
+  <nav class="space-x-4">
+    <a href="#" class="hover:underline">Home</a>
+    <a href="#" class="hover:underline">Restaurants</a>
+  </nav>
+</header>
 
-/* small custom */
-html,body,#__next{ height:100% }
-body{ @apply bg-gray-50 text-gray-800; }
-.container { @apply max-w-6xl mx-auto px-4; }
-.card { @apply bg-white rounded-lg shadow p-4; }
-.btn { @apply inline-block bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600; }
-import '../styles/globals.css';
-import type { AppProps } from 'next/app';
-import { Provider } from 'react-redux';
-import { store } from '../store';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-
-export default function App({ Component, pageProps }: AppProps) {
-  return (
-    <Provider store={store}>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 container py-8">
-          <Component {...pageProps} />
-        </main>
-        <Footer />
-      </div>
-    </Provider>
-  );
-}
-import type { NextPage } from 'next';
-import Link from 'next/link';
-import { GetServerSideProps } from 'next';
-import API from '../lib/api';
-import RestaurantCard from '../components/RestaurantCard';
-
-type Restaurant = {
-  _id: string;
-  name: string;
-  area?: string;
-  cuisine?: string[];
-  rating?: number;
-  votes?: number;
-};
-
-type Props = { restaurants: Restaurant[] };
-
-const Home: NextPage<Props> = ({ restaurants }) => {
-  return (
-    <div>
-      <div className="card mb-6">
-        <h1 className="text-2xl font-bold">Zomato Banda — Discover Restaurants</h1>
-        <p className="mt-2 text-gray-600">Find restaurants, menus and reviews in Banda.</p>
-        <div className="mt-4">
-          <Link href="/restaurants">
-            <a className="btn">Browse Restaurants</a>
-          </Link>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-semibold mb-4">Popular Near You</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {restaurants.map((r) => (
-          <RestaurantCard key={r._id} r={r} />
-        ))}
-      </div>
+<main class="container mx-auto p-4">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold mb-2">Popular Restaurants</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="restaurant-list">
+      <!-- Restaurants will be injected here -->
     </div>
-  );
-};
+  </div>
 
-export const getServerSideProps: GetServerSideProps = async () => {
-  try {
-    // fetch from backend API — change base URL in lib/api as needed
-    const res = await API.get('/restaurants', { params: { limit: 6 } });
-    return { props: { restaurants: res.data } };
-  } catch (err) {
-    return { props: { restaurants: [] } };
-  }
-};
+  <div id="restaurant-detail" class="hidden card p-4 bg-white rounded-lg shadow mt-6">
+    <button onclick="closeDetail()" class="btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded mb-2">Close</button>
+    <h3 id="detail-name" class="text-xl font-bold mb-2"></h3>
+    <p id="detail-area" class="text-gray-600 mb-1"></p>
+    <p id="detail-cuisine" class="text-gray-600 mb-1"></p>
+    <p id="detail-rating" class="text-gray-800 font-semibold"></p>
+    <button onclick="downloadData()" class="btn bg-green-500 hover:bg-green-600 mt-4">Download Info</button>
+  </div>
+</main>
 
-export default Home;
-import { useState, useEffect } from 'react';
-import type { NextPage } from 'next';
-import API from '../../lib/api';
-import RestaurantCard from '../../components/RestaurantCard';
+<footer class="bg-white border-t mt-8 text-center p-4 text-gray-600">
+  © 2025 Zomato Banda — Sample Single Page
+</footer>
 
-type Restaurant = {
-  _id: string;
-  name: string;
-  area?: string;
-  cuisine?: string[];
-  rating?: number;
-  votes?: number;
-};
+<script>
+// Mock data
+const restaurants = [
+  {id: 1, name: "Spicy Treats", area: "Banda", cuisine: ["Indian", "Fast Food"], rating: 4.5},
+  {id: 2, name: "Sweet Delights", area: "Banda", cuisine: ["Desserts"], rating: 4.2},
+  {id: 3, name: "Burger Hub", area: "Banda", cuisine: ["Fast Food"], rating: 4.0},
+];
 
-const Restaurants: NextPage = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [q, setQ] = useState('');
+// Render restaurants
+const listContainer = document.getElementById('restaurant-list');
+restaurants.forEach(r => {
+  const card = document.createElement('div');
+  card.className = 'card bg-white rounded-lg shadow p-4 cursor-pointer';
+  card.innerHTML = `
+    <h3 class="font-semibold text-lg">${r.name}</h3>
+    <p class="text-gray-600">${r.area} • ${r.cuisine.join(', ')}</p>
+    <p class="text-sm mt-1">⭐ ${r.rating.toFixed(1)}</p>
+  `;
+  card.onclick = () => showDetail(r);
+  listContainer.appendChild(card);
+});
 
-  useEffect(() => {
-    fetchRestaurants();
-  }, []);
-
-  const fetchRestaurants = async () => {
-    try {
-      const res = await API.get('/restaurants');
-      setRestaurants(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const search = async () => {
-    try {
-      const res = await API.get('/restaurants', { params: { q } });
-      setRestaurants(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  return (
-    <div>
-      <div className="flex gap-2 mb-4">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search restaurants..."
-          className="flex-1 border rounded p-2"
-        />
-        <button onClick={search} className="btn">Search</button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {restaurants.map((r) => (
-          <RestaurantCard key={r._id} r={r} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-export default Restaurants;
-import { GetServerSideProps } from 'next';
-import API from '../../lib/api';
-
-type Props = {
-  restaurant?: any;
-  menu?: any[];
-  reviews?: any[];
-};
-
-export default function RestaurantDetail({ restaurant, menu, reviews }: Props) {
-  if (!restaurant) return <div className="card">Restaurant not found</div>;
-
-  return (
-    <div>
-      <div className="card mb-4">
-        <h1 className="text-2xl font-bold">{restaurant.name}</h1>
-        <p className="text-gray-600">{restaurant.address}</p>
-        <p className="mt-2">Rating: {Number(restaurant.rating || 0).toFixed(1)} ({restaurant.votes || 0})</p>
-      </div>
-
-      <h2 className="text-xl font-semibold mb-2">Menu</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {menu?.map((m) => (
-          <div key={m._id} className="card">
-            <div className="flex justify-between">
-              <h3 className="font-semibold">{m.name}</h3>
-              <div>₹{m.price}</div>
-            </div>
-            <p className="text-gray-600">{m.description}</p>
-          </div>
-        ))}
-      </div>
-
-      <h2 className="text-xl font-semibold mb-2">Reviews</h2>
-      <div className="space-y-3">
-        {reviews?.map((rv) => (
-          <div key={rv._id} className="card">
-            <div className="flex justify-between">
-              <strong>{rv.user?.name || 'User'}</strong>
-              <div>{rv.rating}★</div>
-            </div>
-            <p className="text-gray-700">{rv.comment}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+// Show detail
+function showDetail(r) {
+  document.getElementById('restaurant-detail').classList.remove('hidden');
+  document.getElementById('detail-name').innerText = r.name;
+  document.getElementById('detail-area').innerText = "Area: " + r.area;
+  document.getElementById('detail-cuisine').innerText = "Cuisine: " + r.cuisine.join(', ');
+  document.getElementById('detail-rating').innerText = "Rating: " + r.rating.toFixed(1);
 }
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const { id } = ctx.params as any;
-  try {
-    const [rRes, mRes, revRes] = await Promise.all([
-      API.get(`/restaurants/${id}`),
-      API.get(`/menus/restaurant/${id}`),
-      API.get(`/reviews/restaurant/${id}`)
-    ]);
-    return { props: { restaurant: rRes.data, menu: mRes.data, reviews: revRes.data } };
-  } catch (err) {
-    return { props: { restaurant: null } };
-  }
-};
-import Link from 'next/link';
-import React from 'react';
-
-export default function Header() {
-  return (
-    <header className="bg-red-500 text-white">
-      <div className="container flex items-center justify-between py-4">
-        <Link href="/"><a className="text-lg font-bold">Zomato Banda</a></Link>
-        <nav className="space-x-4">
-          <Link href="/restaurants"><a>Restaurants</a></Link>
-          <a href="#" onClick={(e)=>e.preventDefault()}>Offers</a>
-          <a href="#" onClick={(e)=>e.preventDefault()}>Login</a>
-        </nav>
-      </div>
-    </header>
-  );
+// Close detail
+function closeDetail() {
+  document.getElementById('restaurant-detail').classList.add('hidden');
 }
-export default function Footer() {
-  return (
-    <footer className="bg-white border-t mt-8">
-      <div className="container py-6 text-center text-gray-600">
-        © {new Date().getFullYear()} Zomato Banda — Sample Frontend
-      </div>
-    </footer>
-  );
+
+// Download data
+function downloadData() {
+  const r = restaurants.find(r => r.name === document.getElementById('detail-name').innerText);
+  if (!r) return;
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(r, null, 2));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", dataStr);
+  dlAnchor.setAttribute("download", `${r.name.replace(/ /g, "_")}.json`);
+  dlAnchor.click();
 }
-import Link from 'next/link';
-import Image from 'next/image';
+</script>
 
-type Props = { r: any };
-
-export default function RestaurantCard({ r }: Props) {
-  return (
-    <div className="card">
-      <div className="h-40 w-full relative rounded overflow-hidden mb-3">
-        <Image
-          src={r.images?.[0] || 'https://via.placeholder.com/600x400?text=Restaurant'}
-          alt={r.name}
-          layout="fill"
-          objectFit="cover"
-        />
-      </div>
-      <h3 className="text-lg font-semibold">{r.name}</h3>
-      <p className="text-sm text-gray-600">{r.area} • {r.cuisine?.join(', ')}</p>
-      <div className="flex items-center justify-between mt-3">
-        <div className="text-sm">⭐ {Number(r.rating || 0).toFixed(1)}</div>
-        <Link href={`/restaurants/${r._id}`}><a className="btn text-sm">View</a></Link>
-      </div>
-    </div>
-  );
-}
-import axios from 'axios';
-
-const API = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
-  headers: { 'Content-Type': 'application/json' }
-});
-
-// optional: interceptors (auth token)
-API.interceptors.request.use((config) => {
-  // const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  // if (token && config.headers) config.headers['Authorization'] = `Bearer ${token}`;
-  return config;
-});
-
-export default API;
-import { configureStore } from '@reduxjs/toolkit';
-import restaurantsReducer from './slices/restaurantsSlice';
-
-export const store = configureStore({
-  reducer: {
-    restaurants: restaurantsReducer
-  }
-});
-
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import API from '../../lib/api';
-
-export const fetchRestaurants = createAsyncThunk('restaurants/fetch', async (q: string | undefined) => {
-  const res = await API.get('/restaurants', { params: q ? { q } : {} });
-  return res.data;
-});
-
-const slice = createSlice({
-  name: 'restaurants',
-  initialState: { items: [], status: 'idle' as 'idle'|'loading'|'succeeded'|'failed' },
-  reducers: {},
-  extraReducers: (builder) => {
-    builder.addCase(fetchRestaurants.pending, (state) => { state.status = 'loading'; });
-    builder.addCase(fetchRestaurants.fulfilled, (state, action) => { state.status = 'succeeded'; state.items = action.payload; });
-    builder.addCase(fetchRestaurants.rejected, (state) => { state.status = 'failed'; });
-  }
-});
-
-export default slice.reducer;
+</body>
+</html>
