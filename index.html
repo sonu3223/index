@@ -58,9 +58,7 @@ module.exports = {
     "./pages/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}"
   ],
-  theme: {
-    extend: {}
-  },
+  theme: { extend: {} },
   plugins: []
 };
 module.exports = {
@@ -73,7 +71,6 @@ module.exports = {
 @tailwind components;
 @tailwind utilities;
 
-/* small custom */
 html,body,#__next{ height:100% }
 body{ @apply bg-gray-50 text-gray-800; }
 .container { @apply max-w-6xl mx-auto px-4; }
@@ -99,232 +96,6 @@ export default function App({ Component, pageProps }: AppProps) {
     </Provider>
   );
 }
-import type { NextPage } from 'next';
-import Link from 'next/link';
-import { GetServerSideProps } from 'next';
-import API from '../lib/api';
-import RestaurantCard from '../components/RestaurantCard';
-
-type Restaurant = {
-  _id: string;
-  name: string;
-  area?: string;
-  cuisine?: string[];
-  rating?: number;
-  votes?: number;
-};
-
-type Props = { restaurants: Restaurant[] };
-
-const Home: NextPage<Props> = ({ restaurants }) => {
-  return (
-    <div>
-      <div className="card mb-6">
-        <h1 className="text-2xl font-bold">Zomato Banda — Discover Restaurants</h1>
-        <p className="mt-2 text-gray-600">Find restaurants, menus and reviews in Banda.</p>
-        <div className="mt-4">
-          <Link href="/restaurants">
-            <a className="btn">Browse Restaurants</a>
-          </Link>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-semibold mb-4">Popular Near You</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {restaurants.map((r) => (
-          <RestaurantCard key={r._id} r={r} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-export const getServerSideProps: GetServerSideProps = async () => {
-  try {
-    // fetch from backend API — change base URL in lib/api as needed
-    const res = await API.get('/restaurants', { params: { limit: 6 } });
-    return { props: { restaurants: res.data } };
-  } catch (err) {
-    return { props: { restaurants: [] } };
-  }
-};
-
-export default Home;
-import { useState, useEffect } from 'react';
-import type { NextPage } from 'next';
-import API from '../../lib/api';
-import RestaurantCard from '../../components/RestaurantCard';
-
-type Restaurant = {
-  _id: string;
-  name: string;
-  area?: string;
-  cuisine?: string[];
-  rating?: number;
-  votes?: number;
-};
-
-const Restaurants: NextPage = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [q, setQ] = useState('');
-
-  useEffect(() => {
-    fetchRestaurants();
-  }, []);
-
-  const fetchRestaurants = async () => {
-    try {
-      const res = await API.get('/restaurants');
-      setRestaurants(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const search = async () => {
-    try {
-      const res = await API.get('/restaurants', { params: { q } });
-      setRestaurants(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  return (
-    <div>
-      <div className="flex gap-2 mb-4">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search restaurants..."
-          className="flex-1 border rounded p-2"
-        />
-        <button onClick={search} className="btn">Search</button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {restaurants.map((r) => (
-          <RestaurantCard key={r._id} r={r} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-export default Restaurants;
-import { GetServerSideProps } from 'next';
-import API from '../../lib/api';
-
-type Props = {
-  restaurant?: any;
-  menu?: any[];
-  reviews?: any[];
-};
-
-export default function RestaurantDetail({ restaurant, menu, reviews }: Props) {
-  if (!restaurant) return <div className="card">Restaurant not found</div>;
-
-  return (
-    <div>
-      <div className="card mb-4">
-        <h1 className="text-2xl font-bold">{restaurant.name}</h1>
-        <p className="text-gray-600">{restaurant.address}</p>
-        <p className="mt-2">Rating: {Number(restaurant.rating || 0).toFixed(1)} ({restaurant.votes || 0})</p>
-      </div>
-
-      <h2 className="text-xl font-semibold mb-2">Menu</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {menu?.map((m) => (
-          <div key={m._id} className="card">
-            <div className="flex justify-between">
-              <h3 className="font-semibold">{m.name}</h3>
-              <div>₹{m.price}</div>
-            </div>
-            <p className="text-gray-600">{m.description}</p>
-          </div>
-        ))}
-      </div>
-
-      <h2 className="text-xl font-semibold mb-2">Reviews</h2>
-      <div className="space-y-3">
-        {reviews?.map((rv) => (
-          <div key={rv._id} className="card">
-            <div className="flex justify-between">
-              <strong>{rv.user?.name || 'User'}</strong>
-              <div>{rv.rating}★</div>
-            </div>
-            <p className="text-gray-700">{rv.comment}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const { id } = ctx.params as any;
-  try {
-    const [rRes, mRes, revRes] = await Promise.all([
-      API.get(`/restaurants/${id}`),
-      API.get(`/menus/restaurant/${id}`),
-      API.get(`/reviews/restaurant/${id}`)
-    ]);
-    return { props: { restaurant: rRes.data, menu: mRes.data, reviews: revRes.data } };
-  } catch (err) {
-    return { props: { restaurant: null } };
-  }
-};
-import Link from 'next/link';
-import React from 'react';
-
-export default function Header() {
-  return (
-    <header className="bg-red-500 text-white">
-      <div className="container flex items-center justify-between py-4">
-        <Link href="/"><a className="text-lg font-bold">Zomato Banda</a></Link>
-        <nav className="space-x-4">
-          <Link href="/restaurants"><a>Restaurants</a></Link>
-          <a href="#" onClick={(e)=>e.preventDefault()}>Offers</a>
-          <a href="#" onClick={(e)=>e.preventDefault()}>Login</a>
-        </nav>
-      </div>
-    </header>
-  );
-}
-export default function Footer() {
-  return (
-    <footer className="bg-white border-t mt-8">
-      <div className="container py-6 text-center text-gray-600">
-        © {new Date().getFullYear()} Zomato Banda — Sample Frontend
-      </div>
-    </footer>
-  );
-}
-import Link from 'next/link';
-import Image from 'next/image';
-
-type Props = { r: any };
-
-export default function RestaurantCard({ r }: Props) {
-  return (
-    <div className="card">
-      <div className="h-40 w-full relative rounded overflow-hidden mb-3">
-        <Image
-          src={r.images?.[0] || 'https://via.placeholder.com/600x400?text=Restaurant'}
-          alt={r.name}
-          layout="fill"
-          objectFit="cover"
-        />
-      </div>
-      <h3 className="text-lg font-semibold">{r.name}</h3>
-      <p className="text-sm text-gray-600">{r.area} • {r.cuisine?.join(', ')}</p>
-      <div className="flex items-center justify-between mt-3">
-        <div className="text-sm">⭐ {Number(r.rating || 0).toFixed(1)}</div>
-        <Link href={`/restaurants/${r._id}`}><a className="btn text-sm">View</a></Link>
-      </div>
-    </div>
-  );
-}
 import axios from 'axios';
 
 const API = axios.create({
@@ -332,87 +103,14 @@ const API = axios.create({
   headers: { 'Content-Type': 'application/json' }
 });
 
-// optional: interceptors (auth token)
 API.interceptors.request.use((config) => {
-  // const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  // if (token && config.headers) config.headers['Authorization'] = `Bearer ${token}`;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token && config.headers) config.headers['Authorization'] = `Bearer ${token}`;
   return config;
 });
 
 export default API;
-import { configureStore } from '@reduxjs/toolkit';
-import restaurantsReducer from './slices/restaurantsSlice';
-
-export const store = configureStore({
-  reducer: {
-    restaurants: restaurantsReducer
-  }
-});
-
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import API from '../../lib/api';
-
-export const fetchRestaurants = createAsyncThunk('restaurants/fetch', async (q: string | undefined) => {
-  const res = await API.get('/restaurants', { params: q ? { q } : {} });
-  return res.data;
-});
-
-const slice = createSlice({
-  name: 'restaurants',
-  initialState: { items: [], status: 'idle' as 'idle'|'loading'|'succeeded'|'failed' },
-  reducers: {},
-  extraReducers: (builder) => {
-    builder.addCase(fetchRestaurants.pending, (state) => { state.status = 'loading'; });
-    builder.addCase(fetchRestaurants.fulfilled, (state, action) => { state.status = 'succeeded'; state.items = action.payload; });
-    builder.addCase(fetchRestaurants.rejected, (state) => { state.status = 'failed'; });
-  }
-});
-
-export default slice.reducer;
-/// <reference types="next" />
-/// <reference types="next/types/global" />
-/// <reference types="next/image-types/global" />
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
-npm install
-# या
-yarn
-
-npm run dev
-# खोले: http://localhost:3000
-
-backend/
-├─ package.json
-├─ .env.example
-├─ server.js
-├─ config/
-│  └─ db.js
-├─ controllers/
-│  ├─ authController.js
-│  ├─ restaurantController.js
-│  ├─ menuController.js
-│  └─ reviewController.js
-├─ graphql/
-│  ├─ schema.js
-│  └─ resolvers.js
-├─ middleware/
-│  └─ auth.js
-├─ models/
-│  ├─ User.js
-│  ├─ Restaurant.js
-│  ├─ MenuItem.js
-│  └─ Review.js
-├─ routes/
-│  ├─ auth.js
-│  ├─ restaurants.js
-│  ├─ menus.js
-│  └─ reviews.js
-├─ scripts/
-│  └─ seed.js
-├─ Dockerfile
-├─ docker-compose.yml
-└─ README.md
 {
   "name": "zomato-banda-backend",
   "version": "1.0.0",
@@ -433,22 +131,17 @@ backend/
     "mongoose": "^7.3.1",
     "morgan": "^1.10.0"
   },
-  "devDependencies": {
-    "nodemon": "^2.0.22"
-  }
+  "devDependencies": { "nodemon": "^2.0.22" }
 }
 PORT=5000
-MONGO_URI=mongodb://mongo:27017/zomato_banda
+MONGO_URI=mongodb://localhost:27017/zomato_banda
 JWT_SECRET=change_this_long_secret
-ML_SERVICE_URL=http://ml-service:5001
+ML_SERVICE_URL=http://localhost:5001
 const mongoose = require('mongoose');
 
 const connectDB = async (mongoURI) => {
   try {
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    await mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
     console.log('MongoDB connected');
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
@@ -457,359 +150,6 @@ const connectDB = async (mongoURI) => {
 };
 
 module.exports = connectDB;
-const mongoose = require('mongoose');
-
-const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true, lowercase: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant' }],
-  createdAt: { type: Date, default: Date.now }
-});
-
-module.exports = mongoose.model('User', UserSchema);
-const mongoose = require('mongoose');
-
-const RestaurantSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  description: { type: String },
-  address: { type: String },
-  area: { type: String },
-  city: { type: String, default: 'Banda' },
-  cuisine: [String],
-  avgCostForTwo: { type: Number },
-  rating: { type: Number, default: 0 },
-  votes: { type: Number, default: 0 },
-  images: [String],
-  location: {
-    type: { type: String, enum: ['Point'], default: 'Point' },
-    coordinates: { type: [Number], default: [0, 0] } // [longitude, latitude]
-  },
-  createdAt: { type: Date, default: Date.now }
-});
-
-RestaurantSchema.index({ location: '2dsphere' });
-
-module.exports = mongoose.model('Restaurant', RestaurantSchema);
-const mongoose = require('mongoose');
-
-const MenuItemSchema = new mongoose.Schema({
-  restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
-  name: { type: String, required: true },
-  description: { type: String },
-  price: { type: Number, required: true },
-  isVeg: { type: Boolean, default: true },
-  createdAt: { type: Date, default: Date.now }
-});
-
-module.exports = mongoose.model('MenuItem', MenuItemSchema);
-const mongoose = require('mongoose');
-
-const ReviewSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant' },
-  rating: { type: Number, min: 1, max: 5 },
-  comment: { type: String },
-  createdAt: { type: Date, default: Date.now }
-});
-
-module.exports = mongoose.model('Review', ReviewSchema);
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-
-module.exports = async function (req, res, next) {
-  const token = req.header('Authorization')?.replace('Bearer ', '') || req.query.token;
-  if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id).select('-password');
-    next();
-  } catch (err) {
-    console.error('Auth middleware error', err.message);
-    res.status(401).json({ message: 'Token is not valid' });
-  }
-};
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-
-exports.signup = async (req, res) => {
-  const { name, email, password } = req.body;
-  try {
-    let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ message: 'User already exists' });
-
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(password, salt);
-
-    user = new User({ name, email, password: hash });
-    await user.save();
-
-    const payload = { id: user._id };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-
-exports.login = async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-
-    const payload = { id: user._id };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-const Restaurant = require('../models/Restaurant');
-const Review = require('../models/Review');
-
-exports.createRestaurant = async (req, res) => {
-  try {
-    const r = new Restaurant(req.body);
-    await r.save();
-    res.json(r);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-
-exports.listRestaurants = async (req, res) => {
-  try {
-    const { q, cuisine, page = 1, limit = 12 } = req.query;
-    const query = {};
-    if (q) query.name = { $regex: q, $options: 'i' };
-    if (cuisine) query.cuisine = cuisine;
-
-    const skip = (page - 1) * limit;
-    const restaurants = await Restaurant.find(query).skip(skip).limit(parseInt(limit));
-    res.json(restaurants);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-
-exports.getRestaurant = async (req, res) => {
-  try {
-    const r = await Restaurant.findById(req.params.id);
-    if (!r) return res.status(404).json({ message: 'Not found' });
-    res.json(r);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-
-// Nearby search example (geo)
-exports.searchNearby = async (req, res) => {
-  try {
-    const { lng, lat, maxDistance = 5000 } = req.query;
-    if (!lng || !lat) return res.status(400).json({ message: 'lng & lat required' });
-
-    const results = await Restaurant.find({
-      location: {
-        $near: {
-          $geometry: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
-          $maxDistance: parseInt(maxDistance)
-        }
-      }
-    }).limit(20);
-
-    res.json(results);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-
-exports.getRestaurantAggregates = async (req, res) => {
-  try {
-    const reviews = await Review.find({ restaurant: req.params.id });
-    const avg = reviews.length ? reviews.reduce((s, x) => s + x.rating, 0) / reviews.length : 0;
-    res.json({ avgRating: avg, votes: reviews.length });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-const MenuItem = require('../models/MenuItem');
-
-exports.createMenuItem = async (req, res) => {
-  try {
-    const m = new MenuItem(req.body);
-    await m.save();
-    res.json(m);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-
-exports.getMenuByRestaurant = async (req, res) => {
-  try {
-    const items = await MenuItem.find({ restaurant: req.params.rid });
-    res.json(items);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-const Review = require('../models/Review');
-const Restaurant = require('../models/Restaurant');
-
-exports.addReview = async (req, res) => {
-  try {
-    const { restaurant, rating, comment } = req.body;
-    const r = new Review({ user: req.user._id, restaurant, rating, comment });
-    await r.save();
-
-    // update aggregates (simple)
-    const reviews = await Review.find({ restaurant });
-    const avg = reviews.reduce((s, x) => s + x.rating, 0) / reviews.length;
-    await Restaurant.findByIdAndUpdate(restaurant, { rating: avg, votes: reviews.length });
-
-    res.json(r);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-
-exports.getReviewsByRestaurant = async (req, res) => {
-  try {
-    const reviews = await Review.find({ restaurant: req.params.rid }).populate('user', 'name');
-    res.json(reviews);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-};
-const express = require('express');
-const router = express.Router();
-const { signup, login } = require('../controllers/authController');
-
-router.post('/signup', signup);
-router.post('/login', login);
-
-module.exports = router;
-const express = require('express');
-const router = express.Router();
-const controller = require('../controllers/restaurantController');
-const auth = require('../middleware/auth');
-
-// public
-router.get('/', controller.listRestaurants);
-router.get('/nearby', controller.searchNearby);
-router.get('/:id', controller.getRestaurant);
-router.get('/:id/aggregates', controller.getRestaurantAggregates);
-
-// admin
-router.post('/', auth, async (req, res, next) => {
-  // simple RBAC: only admin can create
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
-  next();
-}, controller.createRestaurant);
-
-module.exports = router;
-const express = require('express');
-const router = express.Router();
-const controller = require('../controllers/menuController');
-
-router.get('/restaurant/:rid', controller.getMenuByRestaurant);
-router.post('/', controller.createMenuItem); // admin protected can be added
-
-module.exports = router;
-const express = require('express');
-const router = express.Router();
-const controller = require('../controllers/reviewController');
-const auth = require('../middleware/auth');
-
-router.post('/', auth, controller.addReview);
-router.get('/restaurant/:rid', controller.getReviewsByRestaurant);
-
-module.exports = router;
-const { gql } = require('apollo-server-express');
-
-const typeDefs = gql`
-  type Restaurant {
-    _id: ID!
-    name: String!
-    address: String
-    area: String
-    city: String
-    cuisine: [String]
-    rating: Float
-    votes: Int
-    images: [String]
-  }
-
-  type MenuItem {
-    _id: ID!
-    name: String!
-    description: String
-    price: Float
-    isVeg: Boolean
-  }
-
-  type Review {
-    _id: ID!
-    userName: String
-    rating: Int
-    comment: String
-  }
-
-  type Query {
-    restaurants(q: String, cuisine: String, limit: Int): [Restaurant]
-    restaurant(id: ID!): Restaurant
-    menu(restaurantId: ID!): [MenuItem]
-    reviews(restaurantId: ID!): [Review]
-  }
-`;
-
-module.exports = typeDefs;
-const Restaurant = require('../models/Restaurant');
-const MenuItem = require('../models/MenuItem');
-const Review = require('../models/Review');
-
-const resolvers = {
-  Query: {
-    restaurants: async (_, args) => {
-      const { q, cuisine, limit = 20 } = args;
-      const query = {};
-      if (q) query.name = { $regex: q, $options: 'i' };
-      if (cuisine) query.cuisine = cuisine;
-      return await Restaurant.find(query).limit(limit);
-    },
-    restaurant: async (_, { id }) => {
-      return await Restaurant.findById(id);
-    },
-    menu: async (_, { restaurantId }) => {
-      return await MenuItem.find({ restaurant: restaurantId });
-    },
-    reviews: async (_, { restaurantId }) => {
-      const r = await Review.find({ restaurant: restaurantId }).populate('user', 'name');
-      return r.map(x => ({ _id: x._id, userName: x.user?.name || 'User', rating: x.rating, comment: x.comment }));
-    }
-  }
-};
-
-module.exports = resolvers;
 require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
@@ -824,7 +164,6 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-// connect DB
 connectDB(process.env.MONGO_URI || 'mongodb://localhost:27017/zomato_banda');
 
 // REST routes
@@ -833,13 +172,13 @@ app.use('/api/restaurants', require('./routes/restaurants'));
 app.use('/api/menus', require('./routes/menus'));
 app.use('/api/reviews', require('./routes/reviews'));
 
-// GraphQL setup (mounted at /graphql)
+// GraphQL
 async function startApollo() {
   const server = new ApolloServer({ typeDefs, resolvers });
   await server.start();
   server.applyMiddleware({ app, path: '/graphql' });
 }
-startApollo().catch(err => console.error('Apollo start error', err));
+startApollo();
 
 app.get('/', (req, res) => res.send('Zomato Banda API running'));
 
@@ -854,7 +193,8 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 
 async function seed() {
-  await connectDB(process.env.MONGO_URI || 'mongodb://localhost:27017/zomato_banda');
+  await connectDB(process.env.MONGO_URI);
+
   await Restaurant.deleteMany({});
   await MenuItem.deleteMany({});
   await User.deleteMany({});
@@ -873,513 +213,60 @@ async function seed() {
       name: 'The Spice House',
       address: 'Market Road, Banda',
       area: 'Old Town',
-      cuisine: ['North Indian', 'Chinese'],
-      avgCostForTwo: 450,
+      cuisine: ['Chinese', 'Fast Food'],
+      avgCostForTwo: 400,
       images: ['https://via.placeholder.com/600x400?text=Spice+House'],
-      location: { type: 'Point', coordinates: [80.35, 25.49] }
+      location: { type: 'Point', coordinates: [80.34, 25.49] }
     }
   ];
 
-  const created = await Restaurant.insertMany(restaurants);
+  const savedRestaurants = await Restaurant.insertMany(restaurants);
 
-  const menu = [
-    { restaurant: created[0]._id, name: 'Puri Sabzi', description: 'Fresh, hot', price: 120, isVeg: true },
-    { restaurant: created[0]._id, name: 'Gulab Jamun (2 pcs)', description: 'Sweet dessert', price: 60, isVeg: true },
-    { restaurant: created[1]._id, name: 'Paneer Butter Masala', description: 'Creamy paneer', price: 220, isVeg: true },
-    { restaurant: created[1]._id, name: 'Veg Fried Rice', description: 'Chinese style', price: 150, isVeg: true }
+  const menuItems = [
+    { name: 'Paneer Butter Masala', price: 150, restaurant: savedRestaurants[0]._id },
+    { name: 'Gulab Jamun', price: 50, restaurant: savedRestaurants[0]._id },
+    { name: 'Noodles', price: 120, restaurant: savedRestaurants[1]._id },
+    { name: 'Spring Roll', price: 80, restaurant: savedRestaurants[1]._id }
   ];
+  await MenuItem.insertMany(menuItems);
 
-  await MenuItem.insertMany(menu);
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  await User.create({ name: 'Admin', email: 'admin@zomato.com', password: hashedPassword, role: 'admin' });
 
-  const salt = await bcrypt.genSalt(10);
-  const admin = new User({ name: 'Admin', email: 'admin@banda.com', password: await bcrypt.hash('admin123', salt), role: 'admin' });
-  const user = new User({ name: 'User', email: 'user@banda.com', password: await bcrypt.hash('user123', salt) });
-  await admin.save();
-  await user.save();
-
-  console.log('Seeded DB');
-  process.exit(0);
+  console.log('Database seeded successfully');
+  process.exit();
 }
 
-seed().catch(err => { console.error(err); process.exit(1); });
-# Use official Node LTS
-FROM node:18-alpine
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY . .
-
-EXPOSE 5000
-
-CMD ["node", "server.js"]
+seed();
 version: '3.8'
 services:
   mongo:
-    image: mongo:6
-    restart: always
-    volumes:
-      - mongo-data:/data/db
+    image: mongo:7.0
+    container_name: mongo
     ports:
       - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
 
   backend:
-    build: .
+    build: ./backend
+    container_name: zomato-backend
     ports:
       - "5000:5000"
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/zomato_banda
-      - JWT_SECRET=change_this_long_secret
-      - ML_SERVICE_URL=http://ml-service:5001
+    env_file:
+      - ./backend/.env
     depends_on:
       - mongo
-      - ml-service
 
-  ml-service:
-    build:
-      context: ./ml_service
-      dockerfile: Dockerfile
+  frontend:
+    build: ./frontend
+    container_name: zomato-frontend
     ports:
-      - "5001:5001"
-    environment:
-      - FLASK_ENV=development
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env.local
+    depends_on:
+      - backend
 
 volumes:
   mongo-data:
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 5001
-CMD ["python", "app.py"]
-flask
-flask-cors
-scikit-learn
-pandas
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-
-app = Flask(__name__)
-CORS(app)
-
-# dummy recommendation: returns restaurants with same cuisine
-@app.route('/recommend', methods=['POST'])
-def recommend():
-    data = request.json or {}
-    user_id = data.get('userId')
-    favorite_cuisines = data.get('cuisines', [])
-    # dummy static response
-    recs = [
-        {"id": "r1", "name": "Recommended A"},
-        {"id": "r2", "name": "Recommended B"}
-    ]
-    return jsonify({"user": user_id, "recommendations": recs})
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
-# Zomato Banda — Backend
-
-## Requirements
-- Node.js 18+
-- MongoDB (or Docker)
-- (optional) Docker & docker-compose
-
-## Local (without Docker)
-1. cd backend
-2. cp .env.example .env  # edit MONGO_URI, JWT_SECRET
-3. npm install
-4. npm run seed         # populate sample data
-5. npm run dev
-
-API will run on http://localhost:5000
-- REST endpoints:
-  - POST /api/auth/signup
-  - POST /api/auth/login
-  - GET /api/restaurants
-  - GET /api/restaurants/:id
-  - POST /api/restaurants (admin)
-  - GET /api/menus/restaurant/:rid
-  - GET /api/reviews/restaurant/:rid
-- GraphQL: http://localhost:5000/graphql
-
-## With Docker Compose
-1. docker-compose up --build
-2. backend -> http://localhost:5000
-3. ml-service -> http://localhost:5001
-4. mongo -> mongodb://localhost:27017
-npm install pg sequelize sequelize-cli
-const { Sequelize } = require('sequelize');
-
-const sequelize = new Sequelize(
-  process.env.PG_DB || 'zomato',
-  process.env.PG_USER || 'postgres',
-  process.env.PG_PASSWORD || 'password',
-  {
-    host: process.env.PG_HOST || 'localhost',
-    dialect: 'postgres',
-    logging: false
-  }
-);
-
-module.exports = sequelize;
-const { DataTypes } = require('sequelize');
-const sequelize = require('../../config/pgsql');
-
-const User = sequelize.define('User', {
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  name: { type: DataTypes.STRING, allowNull: false },
-  email: { type: DataTypes.STRING, allowNull: false, unique: true },
-  password: { type: DataTypes.STRING, allowNull: false },
-  role: { type: DataTypes.ENUM('user','admin'), defaultValue: 'user' },
-}, { timestamps: true });
-
-module.exports = User;
-const { DataTypes } = require('sequelize');
-const sequelize = require('../../config/pgsql');
-const User = require('./User');
-
-const Order = sequelize.define('Order', {
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  userId: { type: DataTypes.INTEGER, allowNull: false },
-  restaurantId: { type: DataTypes.INTEGER, allowNull: false },
-  totalAmount: { type: DataTypes.FLOAT, allowNull: false },
-  status: { type: DataTypes.ENUM('pending','completed','cancelled'), defaultValue: 'pending' }
-}, { timestamps: true });
-
-User.hasMany(Order, { foreignKey: 'userId' });
-Order.belongsTo(User, { foreignKey: 'userId' });
-
-module.exports = Order;
-npm install redis
-const redis = require('redis');
-
-const client = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
-});
-
-client.on('connect', () => console.log('Redis connected'));
-client.on('error', (err) => console.error('Redis error:', err));
-
-(async () => { await client.connect(); })();
-
-module.exports = client;
-const redisClient = require('../config/redis');
-
-async function cache(req, res, next) {
-  const key = req.originalUrl;
-  const cached = await redisClient.get(key);
-  if (cached) {
-    return res.json(JSON.parse(cached));
-  }
-  res.sendResponse = res.json;
-  res.json = (body) => {
-    redisClient.setEx(key, 60, JSON.stringify(body)); // cache 1 min
-    res.sendResponse(body);
-  };
-  next();
-}
-
-module.exports = cache;
-npm install @elastic/elasticsearch
-const { Client } = require('@elastic/elasticsearch');
-
-const esClient = new Client({
-  node: process.env.ELASTIC_URL || 'http://localhost:9200'
-});
-
-esClient.ping()
-  .then(() => console.log('Elasticsearch connected'))
-  .catch(err => console.error('Elasticsearch error', err));
-
-module.exports = esClient;
-const esClient = require('../config/es');
-const Restaurant = require('../models/Restaurant');
-
-async function indexRestaurants() {
-  const restaurants = await Restaurant.find();
-  for (const r of restaurants) {
-    await esClient.index({
-      index: 'restaurants',
-      id: r._id.toString(),
-      document: {
-        name: r.name,
-        cuisine: r.cuisine,
-        city: r.city,
-        area: r.area,
-        address: r.address
-      }
-    });
-  }
-  console.log('Indexed restaurants to Elasticsearch');
-}
-async function searchRestaurants(query) {
-  const { body } = await esClient.search({
-    index: 'restaurants',
-    query: {
-      multi_match: {
-        query,
-        fields: ['name^3','cuisine','area','city']
-      }
-    }
-  });
-  return body.hits.hits.map(hit => hit._source);
-}
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-EXPOSE 5000
-CMD ["node", "server.js"]
-FROM node:18-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: backend-deployment
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: backend
-  template:
-    metadata:
-      labels:
-        app: backend
-    spec:
-      containers:
-        - name: backend
-          image: myrepo/zomato-backend:latest
-          ports:
-            - containerPort: 5000
-          env:
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secrets
-                  key: mongo-uri
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: backend-service
-spec:
-  type: LoadBalancer
-  selector:
-    app: backend
-  ports:
-    - protocol: TCP
-      port: 5000
-      targetPort: 5000
-server {
-    listen 80;
-    server_name myzomato.com;
-
-    location / {
-        proxy_pass http://frontend:80; # React frontend container
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location /api/ {
-        proxy_pass http://backend-service:5000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location /graphql/ {
-        proxy_pass http://backend-service:5000/graphql;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-User → CDN → Nginx → Backend API
-User → CDN → React static assets (HTML/JS/CSS)
-          Users
-            |
-          CDN (Cloudflare)
-            |
-          Nginx Reverse Proxy
-            |
-   ---------------------------
-   |           |             |
-Frontend     Backend       ML-Service
-(React)   (Node.js + Express + GraphQL)  (Python Flask)
-            |
-      ----------------
-      |              |
-   PostgreSQL      MongoDB
-   (Users,Orders)  (Menus, Reviews)
-            |
-          Redis Cache
-            |
-     Elasticsearch (Search)
-npm install razorpay
-const Razorpay = require('razorpay');
-
-const instance = new Razorpay({
-  key_id: process.env.RZ_KEY_ID || 'YOUR_KEY_ID',
-  key_secret: process.env.RZ_KEY_SECRET || 'YOUR_KEY_SECRET',
-});
-
-module.exports = instance;
-const razorpay = require('../config/razorpay');
-
-exports.createOrder = async (req, res) => {
-  const { amount, currency='INR', receipt } = req.body;
-  try {
-    const order = await razorpay.orders.create({
-      amount: amount*100, // in paise
-      currency,
-      receipt: receipt || `receipt_${Date.now()}`
-    });
-    res.json(order);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Payment order creation failed' });
-  }
-};
-
-exports.verifyPayment = async (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-  const crypto = require('crypto');
-  const body = razorpay_order_id + "|" + razorpay_payment_id;
-  const expectedSignature = crypto.createHmac('sha256', process.env.RZ_KEY_SECRET)
-                                  .update(body.toString())
-                                  .digest('hex');
-  if (expectedSignature === razorpay_signature) {
-    res.json({ status: 'success' });
-  } else {
-    res.status(400).json({ status: 'failed' });
-  }
-};
-const express = require('express');
-const router = express.Router();
-const controller = require('../controllers/paymentController');
-
-router.post('/order', controller.createOrder);
-router.post('/verify', controller.verifyPayment);
-
-module.exports = router;
-npm install firebase-admin
-const admin = require('firebase-admin');
-const serviceAccount = require('../firebase-service-account.json');
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-
-module.exports = admin;
-const admin = require('../config/fcm');
-
-async function sendNotification(token, title, body) {
-  const message = {
-    notification: { title, body },
-    token
-  };
-  try {
-    const response = await admin.messaging().send(message);
-    console.log('Notification sent:', response);
-  } catch (err) {
-    console.error('FCM Error:', err);
-  }
-}
-npm install twilio
-const twilio = require('twilio');
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
-module.exports = client;
-const client = require('../config/twilio');
-
-async function sendOTP(phoneNumber, otp) {
-  try {
-    await client.messages.create({
-      body: `Your Zomato OTP is ${otp}`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: phoneNumber
-    });
-    console.log('OTP sent');
-  } catch (err) {
-    console.error('Twilio Error:', err);
-  }
-}
-pip install pandas scikit-learn flask joblib
-from flask import Flask, request, jsonify
-import pandas as pd
-from sklearn.neighbors import NearestNeighbors
-import joblib
-
-app = Flask(__name__)
-
-# Load pre-trained model & dataset
-orders = pd.read_csv('orders.csv')  # user_id, restaurant_id
-model = joblib.load('knn_model.pkl')  # trained KNN model
-
-@app.route('/recommend', methods=['POST'])
-def recommend():
-    user_id = request.json['user_id']
-    if user_id not in orders['user_id'].values:
-        return jsonify([])
-
-    user_vector = orders[orders['user_id']==user_id].drop('user_id', axis=1).values
-    distances, indices = model.kneighbors(user_vector)
-    recommended_restaurants = orders.iloc[indices[0]]['restaurant_id'].tolist()
-    return jsonify(recommended_restaurants)
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
-import numpy as np
-
-model = load_model('food_classifier.h5')
-
-def classify_food(img_path):
-    img = image.load_img(img_path, target_size=(224,224))
-    x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)/255.0
-    pred = model.predict(x)
-    classes = ['pizza','burger','sushi','pasta']
-    return classes[np.argmax(pred)]
-from pyod.models.iforest import IForest
-import pandas as pd
-
-data = pd.read_csv('transactions.csv')  # amount, user_id, payment_method, location
-model = IForest()
-model.fit(data[['amount']])
-data['fraud'] = model.predict(data[['amount']])
-npm install kafkajs
-const { Kafka } = require('kafkajs');
-
-const kafka = new Kafka({ brokers: ['localhost:9092'] });
-const producer = kafka.producer();
-const consumer = kafka.consumer({ groupId: 'orders-group' });
-
-async function produceOrder(order) {
-  await producer.connect();
-  await producer.send({ topic: 'orders', messages: [{ value: JSON.stringify(order) }] });
-  await producer.disconnect();
-}
-
-async function consumeOrders() {
-  await consumer.connect();
-  await consumer.subscribe({ topic: 'orders', fromBeginning: true });
-  await consumer.run({
-    eachMessage: async ({ message }) => {
-      const order = JSON.parse(message.value.toString());
-      console.log('Processing order:', order);
-    },
-  });
-}
